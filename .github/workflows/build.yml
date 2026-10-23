@@ -12,7 +12,23 @@ jobs:
       - name: Create Project Files
         run: |
           mkdir -p app/src/main/java/com/stresstest app/src/main/res/values app/src/main/res/drawable app/src/main/res/raw
-          if [ -f "icon.png" ]; then cp icon.png app/src/main/res/drawable/ic_launcher.png; fi
+          
+          # --- LOGIKA ICON ---
+          if [ -f "icon.png" ]; then
+            cp icon.png app/src/main/res/drawable/ic_launcher.png
+          else
+            cat > app/src/main/res/drawable/ic_launcher.xml << 'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp" android:height="108dp"
+              android:viewportWidth="108" android:viewportHeight="108">
+              <path android:fillColor="#000000" android:pathData="M0,0h108v108h-108z"/>
+              <path android:fillColor="#00FF00" android:pathData="M54,20L20,40v28l34,20 34,-20v-28z"/>
+              <path android:fillColor="#003300" android:pathData="M54,40L35,52v12l19,12 19,-12v-12z"/>
+          </vector>
+          EOF
+          fi
+          
+          # --- LOGIKA MEDIA ---
           if [ -f "video1.mp4" ]; then cp video1.mp4 app/src/main/res/raw/video1.mp4; fi
           if [ -f "video2.mp4" ]; then cp video2.mp4 app/src/main/res/raw/video2.mp4; fi
           if [ -f "image1.png" ]; then cp image1.png app/src/main/res/drawable/image1.png; fi
@@ -51,8 +67,8 @@ jobs:
                   applicationId = "com.stresstest"
                   minSdk = 26
                   targetSdk = 34
-                  versionCode = 12
-                  versionName = "12.0"
+                  versionCode = 14
+                  versionName = "14.0"
               }
               compileOptions {
                   sourceCompatibility = JavaVersion.VERSION_17

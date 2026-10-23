@@ -68,8 +68,8 @@ jobs:
                   applicationId = "com.stresstest"
                   minSdk = 26
                   targetSdk = 34
-                  versionCode = 17
-                  versionName = "17.0"
+                  versionCode = 18
+                  versionName = "18.0"
               }
               compileOptions {
                   sourceCompatibility = JavaVersion.VERSION_17
@@ -247,7 +247,6 @@ jobs:
               }
 
               private fun startFlying(view: View) {
-                  val random = Random()
                   val runnable = object : Runnable {
                       override fun run() {
                           if (!isRunning) return
@@ -256,9 +255,9 @@ jobs:
                           if (screenWidth == 0 || screenHeight == 0) { handler.postDelayed(this, 100); return }
                           val viewWidth = view.width.takeIf { it > 0 } ?: 200
                           val viewHeight = view.height.takeIf { it > 0 } ?: 200
-                          val targetX = random.nextInt(screenWidth - viewWidth).toFloat()
-                          val targetY = random.nextInt(screenHeight - viewHeight).toFloat()
-                          view.animate().translationX(targetX - (screenWidth / 2f - viewWidth / 2f)).translationY(targetY - (screenHeight / 2f - viewHeight / 2f)).setDuration(300L + random.nextInt(700)).setInterpolator(LinearInterpolator()).withEndAction { if (isRunning) handler.post(this) }.start()
+                          val targetX = Random.nextInt(screenWidth - viewWidth).toFloat()
+                          val targetY = Random.nextInt(screenHeight - viewHeight).toFloat()
+                          view.animate().translationX(targetX - (screenWidth / 2f - viewWidth / 2f)).translationY(targetY - (screenHeight / 2f - viewHeight / 2f)).setDuration(300L + Random.nextInt(700)).setInterpolator(LinearInterpolator()).withEndAction { if (isRunning) handler.post(this) }.start()
                       }
                   }
                   handler.post(runnable)

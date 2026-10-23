@@ -68,8 +68,8 @@ jobs:
                   applicationId = "com.stresstest"
                   minSdk = 26
                   targetSdk = 34
-                  versionCode = 18
-                  versionName = "18.0"
+                  versionCode = 20
+                  versionName = "20.0"
               }
               compileOptions {
                   sourceCompatibility = JavaVersion.VERSION_17
@@ -174,6 +174,8 @@ jobs:
                   handler.post(hackerRunnable)
 
                   val flyingViews = mutableListOf<View>()
+                  
+                  // --- MEDIA TERBANG ---
                   for (i in 1..2) {
                       val vidId = resources.getIdentifier("video$i", "raw", packageName)
                       if (vidId != 0) {
@@ -201,12 +203,25 @@ jobs:
                       }
                   }
 
+                  // --- TEKS TERBANG "Created by Rudoo" ---
+                  val flyingTextView = TextView(this).apply {
+                      text = "Created by Rudoo"
+                      setTextColor(Color.CYAN)
+                      textSize = 35f
+                      typeface = Typeface.DEFAULT_BOLD
+                      setShadowLayer(15f, 0f, 0f, Color.BLUE)
+                  }
+                  val textParams = FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT)
+                  textParams.gravity = Gravity.CENTER
+                  rootLayout.addView(flyingTextView, textParams)
+                  flyingViews.add(flyingTextView)
+
                   // --- TOMBOL X MERAH (DELAY 10 DETIK) ---
                   stopBtn = Button(this).apply {
                       text = "X"
                       setTextColor(Color.WHITE)
                       setBackgroundColor(Color.RED)
-                      visibility = View.INVISIBLE // Sembunyiin dulu 10 detik
+                      visibility = View.INVISIBLE
                       val btnParams = FrameLayout.LayoutParams(120, 120)
                       btnParams.gravity = Gravity.CENTER
                       layoutParams = btnParams
@@ -215,7 +230,6 @@ jobs:
                   rootLayout.addView(stopBtn)
                   stopBtn.bringToFront()
 
-                  // Munculin tombol setelah 10.000 milidetik (10 detik)
                   handler.postDelayed({
                       if (isRunning) {
                           stopBtn.visibility = View.VISIBLE
@@ -257,7 +271,14 @@ jobs:
                           val viewHeight = view.height.takeIf { it > 0 } ?: 200
                           val targetX = Random.nextInt(screenWidth - viewWidth).toFloat()
                           val targetY = Random.nextInt(screenHeight - viewHeight).toFloat()
-                          view.animate().translationX(targetX - (screenWidth / 2f - viewWidth / 2f)).translationY(targetY - (screenHeight / 2f - viewHeight / 2f)).setDuration(300L + Random.nextInt(700)).setInterpolator(LinearInterpolator()).withEndAction { if (isRunning) handler.post(this) }.start()
+                          
+                          view.animate()
+                              .translationX(targetX - (screenWidth / 2f - viewWidth / 2f))
+                              .translationY(targetY - (screenHeight / 2f - viewHeight / 2f))
+                              .setDuration(300L + Random.nextInt(700))
+                              .setInterpolator(LinearInterpolator())
+                              .withEndAction { if (isRunning) handler.post(this) }
+                              .start()
                       }
                   }
                   handler.post(runnable)
@@ -276,8 +297,8 @@ jobs:
                       if (soundId != 0) {
                           val mp = MediaPlayer.create(this, soundId)
                           mp?.apply {
-                              isLooping = true
-                              setVolume(1f, 1f) // Maksimal
+                              isLooping = true // <--- INI BIAR MUTER TERUS
+                              setVolume(1f, 1f)
                               start()
                               mediaPlayers.add(this)
                           }

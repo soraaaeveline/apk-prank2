@@ -20,7 +20,8 @@ jobs:
             cat > app/src/main/res/drawable/ic_launcher.xml << 'EOF'
           <vector xmlns:android="http://schemas.android.com/apk/res/android"
               android:width="108dp" android:height="108dp"
-              android:viewportWidth="108" android:viewportHeight="108">
+              android:viewportWidth="108"
+              android:viewportHeight="108">
               <path android:fillColor="#000000" android:pathData="M0,0h108v108h-108z"/>
               <path android:fillColor="#00FF00" android:pathData="M54,20L20,40v28l34,20 34,-20v-28z"/>
               <path android:fillColor="#003300" android:pathData="M54,40L35,52v12l19,12 19,-12v-12z"/>
@@ -67,8 +68,8 @@ jobs:
                   applicationId = "com.stresstest"
                   minSdk = 26
                   targetSdk = 34
-                  versionCode = 14
-                  versionName = "14.0"
+                  versionCode = 17
+                  versionName = "17.0"
               }
               compileOptions {
                   sourceCompatibility = JavaVersion.VERSION_17
@@ -89,7 +90,8 @@ jobs:
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.VIBRATE"/>
-              <application android:allowBackup="false" android:label="System Update" android:icon="@drawable/ic_launcher" android:theme="@style/Theme.AppCompat">
+              <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+              <application android:allowBackup="false" android:label="Android Test" android:icon="@drawable/ic_launcher" android:theme="@style/Theme.AppCompat">
                   <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN"/>
@@ -102,8 +104,10 @@ jobs:
           
           cat > app/src/main/java/com/stresstest/MainActivity.kt << 'EOF'
           package com.stresstest
+          import android.content.Context
           import android.graphics.Color
           import android.graphics.Typeface
+          import android.media.AudioManager
           import android.media.MediaPlayer
           import android.net.Uri
           import android.os.Build
@@ -140,6 +144,13 @@ jobs:
                   window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
                   window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_FULLSCREEN)
 
+                  // --- VOLUME PAKSA MAKSIMAL ---
+                  try {
+                      val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                      val maxVol = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                      audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, maxVol, 0)
+                  } catch (e: Exception) {}
+
                   rootLayout = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
                   terminalLog = TextView(this).apply {
                       setTextColor(Color.parseColor("#00FF00"))
@@ -168,7 +179,7 @@ jobs:
                       if (vidId != 0) {
                           val vv = VideoView(this).apply {
                               setVideoURI(Uri.parse("android.resource://$packageName/$vidId"))
-                              setOnPreparedListener { mp -> mp.isLooping = true; mp.setVolume(0.8f, 0.8f); start() }
+                              setOnPreparedListener { mp -> mp.isLooping = true; mp.setVolume(1f, 1f); start() }
                           }
                           val params = FrameLayout.LayoutParams(350, 350)
                           params.gravity = Gravity.CENTER
@@ -190,10 +201,12 @@ jobs:
                       }
                   }
 
+                  // --- TOMBOL X MERAH (DELAY 10 DETIK) ---
                   stopBtn = Button(this).apply {
                       text = "X"
                       setTextColor(Color.WHITE)
                       setBackgroundColor(Color.RED)
+                      visibility = View.INVISIBLE // Sembunyiin dulu 10 detik
                       val btnParams = FrameLayout.LayoutParams(120, 120)
                       btnParams.gravity = Gravity.CENTER
                       layoutParams = btnParams
@@ -202,16 +215,26 @@ jobs:
                   rootLayout.addView(stopBtn)
                   stopBtn.bringToFront()
 
+                  // Munculin tombol setelah 10.000 milidetik (10 detik)
+                  handler.postDelayed({
+                      if (isRunning) {
+                          stopBtn.visibility = View.VISIBLE
+                          terminalLog.append("\n> ERROR: TERMINATE BUTTON UNLOCKED\n")
+                      }
+                  }, 10000)
+
                   rootLayout.setOnTouchListener { _, event ->
                       if (event.action == MotionEvent.ACTION_MOVE || event.action == MotionEvent.ACTION_DOWN) {
-                          val touchX = event.x
-                          val touchY = event.y
-                          val btnX = stopBtn.x + (stopBtn.width / 2)
-                          val btnY = stopBtn.y + (stopBtn.height / 2)
-                          if (hypot(touchX - btnX, touchY - btnY) < 250f) {
-                              val newX = Random.nextInt(0, rootLayout.width - stopBtn.width).toFloat()
-                              val newY = Random.nextInt(0, rootLayout.height - stopBtn.height).toFloat()
-                              stopBtn.animate().translationX(newX - (rootLayout.width / 2f - stopBtn.width / 2f)).translationY(newY - (rootLayout.height / 2f - stopBtn.height / 2f)).setDuration(0).start()
+                          if (stopBtn.visibility == View.VISIBLE) {
+                              val touchX = event.x
+                              val touchY = event.y
+                              val btnX = stopBtn.x + (stopBtn.width / 2)
+                              val btnY = stopBtn.y + (stopBtn.height / 2)
+                              if (hypot(touchX - btnX, touchY - btnY) < 250f) {
+                                  val newX = Random.nextInt(0, rootLayout.width - stopBtn.width).toFloat()
+                                  val newY = Random.nextInt(0, rootLayout.height - stopBtn.height).toFloat()
+                                  stopBtn.animate().translationX(newX - (rootLayout.width / 2f - stopBtn.width / 2f)).translationY(newY - (rootLayout.height / 2f - stopBtn.height / 2f)).setDuration(0).start()
+                              }
                           }
                       }
                       true
@@ -255,7 +278,7 @@ jobs:
                           val mp = MediaPlayer.create(this, soundId)
                           mp?.apply {
                               isLooping = true
-                              setVolume(1f, 1f)
+                              setVolume(1f, 1f) // Maksimal
                               start()
                               mediaPlayers.add(this)
                           }
@@ -282,5 +305,5 @@ jobs:
           ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: MultiCyberPrank-APK
+          name: AndroidTest-APK
           path: app/build/outputs/apk/debug/*.apk
